@@ -1,5 +1,7 @@
 # Django application for finding tweets for current top-sellers on Amazon.com
 
+    This demo is currently not working.
+
 ## Before you start
 
 You need a public access key and a secret access key from
