@@ -2,47 +2,43 @@
 # Copyright (c) 2011 ActiveState Software Inc.
 # See the file LICENSE.txt for licensing information.
 
-import os.path
+import os
+import urlparse
+
 _ROOT = os.path.abspath(os.path.dirname(__file__))
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('ericp', 'ericp@activestate.com'),
+#    ('ericp', 'ericp@activestate.com'),
 )
 
 MANAGERS = ADMINS
 
-if 'VCAP_SERVICES' in os.environ:
-    import json
-    vcap_services = json.loads(os.environ['VCAP_SERVICES'])
-    # XXX: avoid hardcoding here
-    mysql_srv = vcap_services['mysql-5.1'][0]
-    cred = mysql_srv['credentials']
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': cred['name'],
-            'USER': cred['user'],
-            'PASSWORD': cred['password'],
-            'HOST': cred['hostname'],
-            'PORT': cred['port'],
-            }
-        }
-    STATIC_URL  ='/static/'
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-            'NAME': os.path.join(_ROOT, 'bookbuzz.sqlite'), # Or path to database file if using sqlite3.
-            'USER': '',                      # Not used with sqlite3.
-            'PASSWORD': '',                  # Not used with sqlite3.
-            'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-            'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-        }
+DATABASES = {}
+if 'DATABASE_URL' in os.environ:
+    url = urlparse.urlparse(os.environ['DATABASE_URL'])
+    DATABASES['default'] = {
+        'NAME': url.path[1:],
+        'USER': url.username,
+        'PASSWORD': url.password,
+        'HOST': url.hostname,
+        'PORT': url.port,
     }
-    STATIC_URL  ='/static/'
+    if url.scheme == 'postgres':
+        DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql_psycopg2'
+    elif url.scheme == 'mysql':
+        DATABASES['default']['ENGINE'] = 'django.db.backends.mysql'
+else:
+    DATABASES['default'] = {
+        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': 'dev.db',                      # Or path to database file if using sqlite3.
+        'USER': '',                      # Not used with sqlite3.
+        'PASSWORD': '',                  # Not used with sqlite3.
+        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+    }
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
